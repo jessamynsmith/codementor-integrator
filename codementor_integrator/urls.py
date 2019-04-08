@@ -17,8 +17,11 @@ from django.contrib import admin
 from django.urls import include, path
 from allauth import urls as allauth_urls
 
+from codementor import urls as codementor_urls
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include(allauth_urls)),
+    path('', include(codementor_urls)),
 ]
