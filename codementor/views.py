@@ -9,11 +9,14 @@ class CodementorWebhookViewset(ModelViewSet):
     serializer_class = cm_serializers.CodementorWebhookSerializer
 
     def perform_create(self, serializer):
-        print('creating')
+        print('creating', self.request.data)
         return super().perform_create(serializer)
 
 
     """
+    TODO: verify signature
+    TODO: can this somehow be used to verify whose account is associated with this webhook call?
+    
     For security reasons, you shouldn't trust incoming events your webhook URL receives. 
     You should verify signatures to ensure the event was sent from Codementor.
 

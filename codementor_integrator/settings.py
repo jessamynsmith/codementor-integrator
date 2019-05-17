@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+import django_heroku
 import dj_database_url
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -20,13 +21,20 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
+SSL_ENABLED = bool(int(os.environ.get('SSL_ENABLED', 0)))
+
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'k&o=0q(6+*#%swmtzn=@*19oflf6808ium70fjoo86_r_@!3ou'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY',
+                            'k&o=0q(6+*#%swmtzn=@*19oflf6808ium70fjoo86_r_@!3ou')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = bool(int(os.environ.get('DJANGO_DEBUG', 1)))
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['codementor-integrator.herokuapp.com', '127.0.0.1', '0.0.0.0']
+
+ADMINS = (
+    (os.environ.get('ADMIN_NAME', 'admin'), os.environ.get('ADMIN_EMAIL', 'example@example.com')),
+)
 
 SITE_ID = 1
 
@@ -132,3 +140,40 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# Email settings
+EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = os.environ.get('SENDGRID_USERNAME')
+EMAIL_HOST_PASSWORD = os.environ.get('SENDGRID_PASSWORD')
+EMAIL_USE_TLS = True
+
+if not EMAIL_HOST_PASSWORD:
+    EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+    EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'emails')
+
+
+# Allauth
+SOCIALACCOUNT_QUERY_EMAIL = True
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+            'https://www.googleapis.com/auth/calendar',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'offline',
+        }
+    }
+}
+CALENDAR_TIME_ZONE = 'America/Edmonton'
+
+
+# Do not allow django heroku to override allowed_hosts; only allow it to
+# override static if running in an SSL environment (not localhost).
+django_heroku.settings(locals(), allowed_hosts=False, staticfiles=SSL_ENABLED)
+# override DATABASE_URL set by django_heroku because it forces SSL mode locally
+locals()['DATABASES']['default'] = dj_database_url.config(
+    conn_max_age=django_heroku.MAX_CONN_AGE, ssl_require=SSL_ENABLED,
+    default='sqlite:///db.sqlite3')
