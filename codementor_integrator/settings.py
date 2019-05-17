@@ -32,8 +32,9 @@ DEBUG = bool(int(os.environ.get('DJANGO_DEBUG', 1)))
 
 ALLOWED_HOSTS = ['codementor-integrator.herokuapp.com', '127.0.0.1', '0.0.0.0']
 
+ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'example@example.com')
 ADMINS = (
-    (os.environ.get('ADMIN_NAME', 'admin'), os.environ.get('ADMIN_EMAIL', 'example@example.com')),
+    (os.environ.get('ADMIN_NAME', 'admin'), ADMIN_EMAIL),
 )
 
 SITE_ID = 1
