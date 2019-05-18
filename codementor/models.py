@@ -36,8 +36,7 @@ def add_calendar_event(sender, instance=None, created=False, **kwargs):
     if instance.event_name == "scheduled_session.confirmed":
         appt_timestamp = data['appointment_timestamp']
         timezone = pytz.timezone(settings.CALENDAR_TIME_ZONE)
-        appt_time = datetime.datetime.fromtimestamp(int(appt_timestamp))
-        appt_time = timezone.localize(appt_time)
+        appt_time = datetime.datetime.fromtimestamp(int(appt_timestamp), tz=timezone)
         end_time = appt_time + datetime.timedelta(hours=1)
         event_data = {
             'summary': '{} scheduled session'.format(data['mentee']['name']),
