@@ -18,7 +18,8 @@ class CodementorWebhook(models.Model):
     # TODO How to know what user the data is for? Maybe require everyone to add a url parameter of their email?
 
     def __str__(self):
-        return '{} ({})'.format(self.event_name, self.created_at)
+        return '{} - {} ({})'.format(
+            self.event_name, self.data.get('mentee', {}).get('name', ''), self.created_at)
 
 
 def add_calendar_event(sender, instance=None, created=False, **kwargs):
