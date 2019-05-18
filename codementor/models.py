@@ -17,9 +17,20 @@ class CodementorWebhook(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     # TODO How to know what user the data is for? Maybe require everyone to add a url parameter of their email?
 
+    def get_appointment_time(self):
+        appt_time = ''
+        appt_timestamp = self.data.get('appointment_timestamp')
+        if appt_timestamp:
+            timezone = pytz.timezone(settings.CALENDAR_TIME_ZONE)
+            appt_time = datetime.datetime.fromtimestamp(int(appt_timestamp), tz=timezone)
+        return appt_time
+
+    def get_mentee_name(self):
+        return self.data.get('mentee', {}).get('name', '')
+
     def __str__(self):
-        return '{} - {} ({})'.format(
-            self.event_name, self.data.get('mentee', {}).get('name', ''), self.created_at)
+        return '{} - {} - {}'.format(
+            self.event_name, self.get_mentee_name(), self.get_appointment_time())
 
 
 def add_calendar_event(sender, instance=None, created=False, **kwargs):
@@ -35,9 +46,7 @@ def add_calendar_event(sender, instance=None, created=False, **kwargs):
     service = build('calendar', 'v3', credentials=creds)
 
     if instance.event_name == "scheduled_session.confirmed":
-        appt_timestamp = data['appointment_timestamp']
-        timezone = pytz.timezone(settings.CALENDAR_TIME_ZONE)
-        appt_time = datetime.datetime.fromtimestamp(int(appt_timestamp), tz=timezone)
+        appt_time = instance.get_appointment_time()
         end_time = appt_time + datetime.timedelta(hours=1)
         event_data = {
             'summary': '{} scheduled session'.format(data['mentee']['name']),
