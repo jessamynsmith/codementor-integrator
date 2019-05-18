@@ -7,6 +7,7 @@ from codementor import serializers as cm_serializers
 class CodementorWebhookViewset(ModelViewSet):
     queryset = cm_models.CodementorWebhook.objects.all()
     serializer_class = cm_serializers.CodementorWebhookSerializer
+    http_method_names = ['POST']
 
     def perform_create(self, serializer):
         print('creating', self.request.data)
