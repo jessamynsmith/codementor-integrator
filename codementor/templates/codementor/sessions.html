@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+
+{% block title %}Sessions{% endblock %}
+
+{% block content %}
+    
+    <h3>Sessions</h3>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Session</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for object in object_list %}
+    <tr>
+    	<td>
+            {{ object }}
+        </td>
+	</tr>
+    {% endfor %}
+</tbody>
+</table>
+
+{% endblock %}

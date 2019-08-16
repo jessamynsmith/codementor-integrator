@@ -72,7 +72,7 @@ ROOT_URLCONF = 'codementor_integrator.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'codementor_integrator', 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -152,6 +152,9 @@ EMAIL_USE_TLS = True
 if not EMAIL_HOST_PASSWORD:
     EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
     EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'emails')
+
+
+LOGIN_REDIRECT_URL = '/sessions/'
 
 
 # Allauth

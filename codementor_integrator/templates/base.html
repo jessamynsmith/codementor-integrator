@@ -1,0 +1,108 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<!-- base file -->
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %}</title>
+
+    <!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+<!-- icon set-->
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+
+    {% block extrahead %}{% endblock %}
+
+</head>
+
+
+
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-inverse bg-light">
+  <a class="navbar-brand" href="/">
+      Codementor Integrator
+  </a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto">
+        {% if request.user.is_authenticated %}
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'sessions' %}">Sessions</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'completed_sessions' %}">Completed Sessions</a>
+      </li>
+        {% endif %}
+    </ul>
+      
+    <ul class="navbar-nav ml-auto">
+        {% if request.user.is_authenticated %}
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          {{ user.email }}
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="{% url 'user_profile' pk=user.userprofile.pk %}">User Profile</a>
+          <a class="dropdown-item" href="{% url 'account_logout' %}">Logout</a>
+        </div>
+      </li>
+        {% endif %}
+    </ul>
+
+  </div>
+</nav>
+
+
+{% if messages %}
+<div class="alert alert-warning alert-dismissible" role="alert">
+<ul class=flashes>
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+    </ul>
+  </div>
+{% endif %}
+
+<br>
+  <div id="content" class="container-fluid">
+    {% block content %}{% endblock %}
+  </div>
+
+  <div id="footer">
+        {% block footer %}
+        <br><br>
+<div class="text-center">
+        &copy; Copyright 2019 | v1.0</div>
+        {% endblock %}
+    </div>
+
+<!-- Latest compiled and minified JavaScript -->
+
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+<!--  jquery plug-in jquery.serializeJSON -->
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/jquery.serializeJSON/2.9.0/jquery.serializejson.min.js"
+  crossorigin="anonymous"></script>
+
+<!--  jquery plug-in js-cookie -->
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min.js" 
+  crossorigin="anonymous"></script>
+
+{% block extrajs %}{% endblock %}
+    
+</body>
+</html>
