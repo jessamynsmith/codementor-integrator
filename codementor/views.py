@@ -7,7 +7,7 @@ from codementor import forms as cm_forms
 from codementor import models as cm_models
 from codementor import serializers as cm_serializers
 from codementor.codementor_api import CodementorApi
-from codementor.google_calendar import add_calendar_event
+from codementor.google_calendar import GoogleCalendarService
 
 
 class UserProfileUpdateView(LoginRequiredMixin, UpdateView):
@@ -23,6 +23,15 @@ class AddCalendarEventsView(LoginRequiredMixin, FormView):
     form_class = cm_forms.ScheduleDataForm
     success_url = reverse_lazy('sessions')
 
+    def dispatch(self, request, *args, **kwargs):
+        self.service = GoogleCalendarService(self.request.user)
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['calendars'] = self.service.get_calendar_list()
+        return kwargs
+
     def form_valid(self, form):
         response = super().form_valid(form)
         schedule_data = form.cleaned_data['schedule_data']
@@ -31,8 +40,9 @@ class AddCalendarEventsView(LoginRequiredMixin, FormView):
             end_time = item[1]
             summary = form.cleaned_data['summary']
             description = form.cleaned_data['description']
-            user = self.request.user
-            add_calendar_event(user, start_time, end_time, summary, description)
+            calendar_id = form.cleaned_data['calendar']
+            self.service.add_calendar_event(start_time, end_time, summary,
+                                            description, calendar_id=calendar_id)
         return response
 
 

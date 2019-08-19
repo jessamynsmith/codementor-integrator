@@ -8,13 +8,13 @@ from django.contrib.postgres.fields import JSONField
 
 from allauth.socialaccount.models import SocialToken
 
-from codementor.google_calendar import add_calendar_event
+from codementor.google_calendar import GoogleCalendarService
 
 
 class UserProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     codementor_api_key = models.CharField(max_length=20)
-    
+
     def __str__(self):
         return 'Profile for {}'.format(self.user)
 
@@ -65,7 +65,8 @@ def add_webhook_calendar_event(sender, instance=None, created=False, **kwargs):
         description = data['schedule_url']
 
         user = get_user_model().objects.get(email=settings.ADMIN_EMAIL)
-        add_calendar_event(user, start_time, end_time, summary, description)
+        service = GoogleCalendarService(user)
+        service.add_calendar_event(start_time, end_time, summary, description)
 
 
 def add_user_profile(sender, instance=None, created=False, **kwargs):

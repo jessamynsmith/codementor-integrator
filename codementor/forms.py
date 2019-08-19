@@ -8,6 +8,14 @@ class ScheduleDataForm(forms.Form):
     summary = forms.CharField()
     description = forms.CharField(required=False)
 
+    def __init__(self, *args, **kwargs):
+        calendars = kwargs.pop('calendars', [])
+        super().__init__(*args, **kwargs)
+        calendar_choices = []
+        for calendar in calendars:
+            calendar_choices.append((calendar['id'], calendar['summary']))
+        self.fields['calendar'] = forms.ChoiceField(choices=calendar_choices)
+
     def compose_datetime(self, today, parsed_date, parsed_time):
         hour_minute = parsed_time.split(':')
         hour = int(hour_minute[0])
