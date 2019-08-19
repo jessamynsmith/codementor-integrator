@@ -91,7 +91,7 @@ class CodementorWebhookViewset(ModelViewSet):
     def create(self, request, *args, **kwargs):
         email = self.request.query_params.get('email')
         user = get_user_model().objects.get(email=email)
-        if user and user.userprofile.codementor_web_secret:
+        if user and hasattr(user, 'userprofile') and user.userprofile.codementor_web_secret:
             signature_header = request.META.get('HTTP_X_CM_SIGNATURE')
             print('signature_header', signature_header)
             digest = hmac.new(
