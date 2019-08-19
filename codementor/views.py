@@ -1,6 +1,13 @@
+import base64
+import hashlib
+import hmac
+
+from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import FormView, ListView, TemplateView, UpdateView
 from django.urls import reverse_lazy
+from rest_framework import status
+from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from codementor import forms as cm_forms
@@ -19,7 +26,8 @@ class UserProfileUpdateView(LoginRequiredMixin, UpdateView):
 
     template_name = 'codementor/user_profile.html'
     model = cm_models.UserProfile
-    fields = ['codementor_api_key']
+    fields = ['codementor_api_key', 'codementor_web_secret']
+    success_url = reverse_lazy('sessions')
 
 
 class AddCalendarEventsView(LoginRequiredMixin, FormView):
@@ -80,36 +88,39 @@ class CodementorWebhookViewset(ModelViewSet):
     serializer_class = cm_serializers.CodementorWebhookSerializer
     http_method_names = ['post']
 
+    def create(self, request, *args, **kwargs):
+        email = self.request.query_params.get('email')
+        user = get_user_model().objects.get(email=email)
+        if user and user.userprofile.codementor_web_secret:
+            signature_header = request.META.get('HTTP_X_CM_SIGNATURE')
+            print('signature_header', signature_header)
+            digest = hmac.new(
+                user.userprofile.codementor_web_secret.encode(),
+                msg=request.stream.body,
+                digestmod=hashlib.sha256).digest()
+            calculated_signature = base64.b64encode(digest).decode()
+            print('calculated_signature', calculated_signature)
+            if signature_header == calculated_signature:
+                print('equal!')
+            return super().create(request, *args, **kwargs)
+
+        # Return 200 to keep Codementor happy
+        return Response({}, status=status.HTTP_200_OK)
+
+        """
+        Each webhook event will include a header called X-Cm-Signature. It's a HMAC hex 
+        digest of the response body generated using the sha256 hash function and the
+        CODEMENTOR_WEB_SECRET as the HMAC key. You can generate the signature from the 
+        payload and compare it with X-Cm-Signature to make sure the request is sent from Codementor.
+        
+        import hmac
+        import hashlib
+        import base64
+        
+        digest = hmac.new(secret, msg=thing_to_hash, digestmod=hashlib.sha256).digest()
+        signature = base64.b64encode(digest).decode()
+        """
+
     def perform_create(self, serializer):
-        print('creating', self.request.data)
-        return super().perform_create(serializer)
-
-
-    """
-    TODO: verify signature
-    TODO: can this somehow be used to verify whose account is associated with this webhook call?
-    
-    For security reasons, you shouldn't trust incoming events your webhook URL receives. 
-    You should verify signatures to ensure the event was sent from Codementor.
-
-    Each webhook event will include a header called X-Cm-Signature. It's a HMAC hex 
-    digest of the response body generated using the sha256 hash function and the
-    CODEMENTOR_WEB_SECRET as the HMAC key. You can generate the signature from the 
-    payload and compare it with X-Cm-Signature to make sure the request is sent from Codementor.
-    """
-
-    """
-    {
-      "event_name": "scheduled_session.confirmed",
-      "data": {
-        "id": "52nbekb9ca",
-        "confirmed_at": 1538019834,
-        "appointment_timestamp": 1538150400,
-        "mentee": {
-          "username": "mentee-username",
-          "name": "mentee-name"
-        },
-        "schedule_url": "https://www.codementor.io/m/dashboard/my-schedules/52nbekb9ca"
-      }
-    }
-    """
+        email = self.request.query_params.get('email')
+        serializer.save(email=email)

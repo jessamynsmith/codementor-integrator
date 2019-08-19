@@ -13,7 +13,8 @@ from codementor.google_calendar import GoogleCalendarService
 
 class UserProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    codementor_api_key = models.CharField(max_length=20)
+    codementor_api_key = models.CharField(max_length=20, null=True, blank=True)
+    codementor_web_secret = models.CharField(max_length=20, null=True, blank=True)
 
     def __str__(self):
         return 'Profile for {}'.format(self.user)
@@ -25,10 +26,9 @@ class UserProfile(models.Model):
 
 class CodementorWebhook(models.Model):
     event_name = models.CharField(max_length=40)
+    email = models.EmailField()
     data = JSONField()
     created_at = models.DateTimeField(auto_now_add=True)
-    # TODO How to know what user the data is for? Maybe require everyone to add a url
-    # parameter of their email? # Or will verifying take care of that?
 
     def get_appointment_time(self):
         appt_time = ''
@@ -48,7 +48,7 @@ class CodementorWebhook(models.Model):
 
 def add_webhook_calendar_event(sender, instance=None, created=False, **kwargs):
     data = instance.data
-    
+
     """
     Event Name	Description
     scheduled_session.created	When a scheduled session is created
@@ -64,9 +64,10 @@ def add_webhook_calendar_event(sender, instance=None, created=False, **kwargs):
         summary = '{} scheduled session'.format(data['mentee']['name'])
         description = data['schedule_url']
 
-        user = get_user_model().objects.get(email=settings.ADMIN_EMAIL)
-        service = GoogleCalendarService(user)
-        service.add_calendar_event(start_time, end_time, summary, description)
+        user = get_user_model().objects.get(email=instance.email)
+        if user:
+            service = GoogleCalendarService(user)
+            service.add_calendar_event(start_time, end_time, summary, description)
 
 
 def add_user_profile(sender, instance=None, created=False, **kwargs):
