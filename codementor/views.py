@@ -1,10 +1,13 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView, TemplateView, UpdateView
+from django.views.generic import FormView, ListView, TemplateView, UpdateView
+from django.urls import reverse_lazy
 from rest_framework.viewsets import ModelViewSet
 
+from codementor import forms as cm_forms
 from codementor import models as cm_models
 from codementor import serializers as cm_serializers
 from codementor.codementor_api import CodementorApi
+from codementor.google_calendar import add_calendar_event
 
 
 class UserProfileUpdateView(LoginRequiredMixin, UpdateView):
@@ -14,10 +17,29 @@ class UserProfileUpdateView(LoginRequiredMixin, UpdateView):
     fields = ['codementor_api_key']
 
 
+class AddCalendarEventsView(LoginRequiredMixin, FormView):
+
+    template_name = 'codementor/add_calendar_events.html'
+    form_class = cm_forms.ScheduleDataForm
+    success_url = reverse_lazy('completed_sessions')
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        schedule_data = form.cleaned_data['schedule_data']
+        for item in schedule_data:
+            start_time = item[0]
+            end_time = item[1]
+            summary = form.cleaned_data['summary']
+            description = form.cleaned_data['description']
+            user = self.request.user
+            add_calendar_event(user, start_time, end_time, summary, description)
+        return response
+
+
 class CodementorCompletedSessions(LoginRequiredMixin, TemplateView):
 
     template_name = 'codementor/scheduled_sessions.html'
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         codementor_api = CodementorApi()

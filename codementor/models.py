@@ -6,9 +6,9 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import JSONField
 
-from googleapiclient.discovery import build
-from google.oauth2.credentials import Credentials, _GOOGLE_OAUTH2_TOKEN_ENDPOINT
 from allauth.socialaccount.models import SocialToken
+
+from codementor.google_calendar import add_calendar_event
 
 
 class UserProfile(models.Model):
@@ -46,17 +46,8 @@ class CodementorWebhook(models.Model):
             self.event_name, self.get_mentee_name(), self.get_appointment_time())
 
 
-def add_calendar_event(sender, instance=None, created=False, **kwargs):
+def add_webhook_calendar_event(sender, instance=None, created=False, **kwargs):
     data = instance.data
-
-    user = get_user_model().objects.get(email=settings.ADMIN_EMAIL)
-    social_token = SocialToken.objects.filter(account__user=user).first()
-    creds = Credentials(social_token.token, refresh_token=social_token.token_secret,
-                        token_uri=_GOOGLE_OAUTH2_TOKEN_ENDPOINT,
-                        client_id=social_token.app.client_id,
-                        client_secret=social_token.app.secret)
-
-    service = build('calendar', 'v3', credentials=creds)
     
     """
     Event Name	Description
@@ -68,30 +59,13 @@ def add_calendar_event(sender, instance=None, created=False, **kwargs):
     """
 
     if instance.event_name == "scheduled_session.confirmed":
-        appt_time = instance.get_appointment_time()
-        end_time = appt_time + datetime.timedelta(hours=1)
-        event_data = {
-            'summary': '{} scheduled session'.format(data['mentee']['name']),
-            'description': data['schedule_url'],
-            'start': {
-                'dateTime': appt_time.isoformat(),
-                'timeZone': settings.CALENDAR_TIME_ZONE,
-            },
-            'end': {
-                'dateTime': end_time.isoformat(),
-                'timeZone': settings.CALENDAR_TIME_ZONE,
-            },
-            'reminders': {
-                'useDefault': False,
-                'overrides': [
-                    {'method': 'email', 'minutes': 24 * 60},
-                    {'method': 'popup', 'minutes': 10},
-                ],
-            },
-        }
+        start_time = instance.get_appointment_time()
+        end_time = start_time + datetime.timedelta(hours=1)
+        summary = '{} scheduled session'.format(data['mentee']['name'])
+        description = data['schedule_url']
 
-        event = service.events().insert(calendarId='primary', body=event_data).execute()
-        print('created event', event)
+        user = get_user_model().objects.get(email=settings.ADMIN_EMAIL)
+        add_calendar_event(user, start_time, end_time, summary, description)
 
 
 def add_user_profile(sender, instance=None, created=False, **kwargs):
@@ -99,5 +73,5 @@ def add_user_profile(sender, instance=None, created=False, **kwargs):
         UserProfile.objects.create(user=instance)
 
 
-models.signals.post_save.connect(add_calendar_event, CodementorWebhook)
+models.signals.post_save.connect(add_webhook_calendar_event, CodementorWebhook)
 models.signals.post_save.connect(add_user_profile, get_user_model())

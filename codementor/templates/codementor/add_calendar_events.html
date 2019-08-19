@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+
+{% block title %}User Profile{% endblock %}
+
+{% block content %}
+    
+<h3>Add Events</h3>
+    
+    <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="Save">
+    <a href="{% url 'completed_sessions' %}">Cancel</a>
+    </form>
+
+{% endblock %}
