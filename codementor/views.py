@@ -1,4 +1,4 @@
-import base64
+import binascii
 import hashlib
 import hmac
 
@@ -92,35 +92,21 @@ class CodementorWebhookViewset(ModelViewSet):
         email = self.request.query_params.get('email')
         user = get_user_model().objects.get(email=email)
         if user and hasattr(user, 'userprofile') and user.userprofile.codementor_web_secret:
-            signature_header = request.META.get('HTTP_X_CM_SIGNATURE')
+            signature_header = request.META.get('HTTP_X_CM_SIGNATURE').encode()
             print('signature_header', signature_header)
             digest = hmac.new(
                 user.userprofile.codementor_web_secret.encode(),
                 msg=request.stream.body,
                 digestmod=hashlib.sha256).digest()
-            calculated_signature = base64.b64encode(digest).decode()
+            calculated_signature = binascii.b2a_hex(digest)
             print('calculated_signature', calculated_signature)
             print('request.stream.body', request.stream.body)
             if signature_header == calculated_signature:
                 print('equal!')
-            return super().create(request, *args, **kwargs)
+                return super().create(request, *args, **kwargs)
 
         # Return 200 to keep Codementor happy
         return Response({}, status=status.HTTP_200_OK)
-
-        """
-        Each webhook event will include a header called X-Cm-Signature. It's a HMAC hex 
-        digest of the response body generated using the sha256 hash function and the
-        CODEMENTOR_WEB_SECRET as the HMAC key. You can generate the signature from the 
-        payload and compare it with X-Cm-Signature to make sure the request is sent from Codementor.
-        
-        import hmac
-        import hashlib
-        import base64
-        
-        digest = hmac.new(secret, msg=thing_to_hash, digestmod=hashlib.sha256).digest()
-        signature = base64.b64encode(digest).decode()
-        """
 
     def perform_create(self, serializer):
         email = self.request.query_params.get('email')
