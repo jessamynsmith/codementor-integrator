@@ -21,7 +21,7 @@ class AddCalendarEventsView(LoginRequiredMixin, FormView):
 
     template_name = 'codementor/add_calendar_events.html'
     form_class = cm_forms.ScheduleDataForm
-    success_url = reverse_lazy('completed_sessions')
+    success_url = reverse_lazy('sessions')
 
     def form_valid(self, form):
         response = super().form_valid(form)

@@ -9,9 +9,10 @@
     
     <form method="post">
     {% csrf_token %}
+        <p>Add data as month/day start_hour-end_hour (e.g. 8/19 5-10)</p>
     {{ form.as_p }}
     <input type="submit" value="Save">
-    <a href="{% url 'completed_sessions' %}">Cancel</a>
+    <a href="{% url 'sessions' %}">Cancel</a>
     </form>
 
 {% endblock %}

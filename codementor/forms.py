@@ -4,7 +4,7 @@ from django import forms
 
 
 class ScheduleDataForm(forms.Form):
-    schedule_data = forms.CharField(widget=forms.Textarea)
+    schedule_data = forms.CharField(widget=forms.Textarea(attrs={'placeholder': '8/19 5-10'}))
     summary = forms.CharField()
     description = forms.CharField(required=False)
 
