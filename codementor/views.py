@@ -100,6 +100,7 @@ class CodementorWebhookViewset(ModelViewSet):
                 digestmod=hashlib.sha256).digest()
             calculated_signature = base64.b64encode(digest).decode()
             print('calculated_signature', calculated_signature)
+            print('request.stream.body', request.stream.body)
             if signature_header == calculated_signature:
                 print('equal!')
             return super().create(request, *args, **kwargs)
