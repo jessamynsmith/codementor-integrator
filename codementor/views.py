@@ -10,6 +10,11 @@ from codementor.codementor_api import CodementorApi
 from codementor.google_calendar import GoogleCalendarService
 
 
+class PrivacyPolicyView(TemplateView):
+
+    template_name = 'codementor/privacy_policy.html'
+
+
 class UserProfileUpdateView(LoginRequiredMixin, UpdateView):
 
     template_name = 'codementor/user_profile.html'
