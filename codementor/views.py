@@ -17,6 +17,11 @@ from codementor.codementor_api import CodementorApi
 from codementor.google_calendar import GoogleCalendarService
 
 
+class HomeView(TemplateView):
+
+    template_name = 'codementor/index.html'
+
+
 class PrivacyPolicyView(TemplateView):
 
     template_name = 'codementor/privacy_policy.html'
