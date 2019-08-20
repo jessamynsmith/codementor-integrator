@@ -52,7 +52,7 @@
           {{ user.email }}
         </a>
         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-          <a class="dropdown-item" href="{% url 'user_profile' pk=user.userprofile.pk %}">User Profile</a>
+          <a class="dropdown-item" href="{% url 'user_profile' %}">User Profile</a>
           <a class="dropdown-item" href="{% url 'account_logout' %}">Logout</a>
         </div>
       </li>

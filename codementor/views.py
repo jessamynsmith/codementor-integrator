@@ -4,7 +4,7 @@ import hmac
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import FormView, ListView, TemplateView, UpdateView
+from django.views.generic import DeleteView, DetailView, FormView, ListView, TemplateView, UpdateView
 from django.urls import reverse_lazy
 from rest_framework import status
 from rest_framework.response import Response
@@ -27,12 +27,34 @@ class PrivacyPolicyView(TemplateView):
     template_name = 'codementor/privacy_policy.html'
 
 
+class UserProfileDetailView(LoginRequiredMixin, DetailView):
+
+    model = cm_models.UserProfile
+    fields = ['codementor_api_key', 'codementor_web_secret']
+    
+    def get_object(self, queryset=None):
+        return self.request.user.userprofile
+
+
 class UserProfileUpdateView(LoginRequiredMixin, UpdateView):
 
-    template_name = 'codementor/user_profile.html'
     model = cm_models.UserProfile
     fields = ['codementor_api_key', 'codementor_web_secret']
     success_url = reverse_lazy('sessions')
+    
+    def get_object(self, queryset=None):
+        return self.request.user.userprofile
+
+
+class AccountDeleteView(LoginRequiredMixin, DeleteView):
+
+    template_name = 'codementor/user_confirm_delete.html'
+
+    model = get_user_model()
+    success_url = reverse_lazy('home')
+    
+    def get_object(self, queryset=None):
+        return self.request.user
 
 
 class AddCalendarEventsView(LoginRequiredMixin, FormView):
