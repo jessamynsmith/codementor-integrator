@@ -26,7 +26,8 @@ class UserProfile(models.Model):
 
 class CodementorWebhook(models.Model):
     event_name = models.CharField(max_length=40)
-    email = models.EmailField()
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                             null=True, blank=True)
     data = JSONField()
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -64,9 +65,8 @@ def add_webhook_calendar_event(sender, instance=None, created=False, **kwargs):
         summary = '{} scheduled session'.format(data['mentee']['name'])
         description = data['schedule_url']
 
-        user = get_user_model().objects.get(email=instance.email)
-        if user:
-            service = GoogleCalendarService(user)
+        if instance.user:
+            service = GoogleCalendarService(instance.user)
             service.add_calendar_event(start_time, end_time, summary, description)
 
 

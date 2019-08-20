@@ -93,21 +93,17 @@ class CodementorWebhookViewset(ModelViewSet):
         user = get_user_model().objects.get(email=email)
         if user and hasattr(user, 'userprofile') and user.userprofile.codementor_web_secret:
             signature_header = request.META.get('HTTP_X_CM_SIGNATURE').encode()
-            print('signature_header', signature_header)
             digest = hmac.new(
                 user.userprofile.codementor_web_secret.encode(),
                 msg=request.stream.body,
                 digestmod=hashlib.sha256).digest()
             calculated_signature = binascii.b2a_hex(digest)
-            print('calculated_signature', calculated_signature)
-            print('request.stream.body', request.stream.body)
             if signature_header == calculated_signature:
-                print('equal!')
+                self.user = user
                 return super().create(request, *args, **kwargs)
 
         # Return 200 to keep Codementor happy
         return Response({}, status=status.HTTP_200_OK)
 
     def perform_create(self, serializer):
-        email = self.request.query_params.get('email')
-        serializer.save(email=email)
+        serializer.save(user=self.user)
