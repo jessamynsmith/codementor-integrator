@@ -116,6 +116,7 @@ class CodementorWebhookViewset(ModelViewSet):
     http_method_names = ['post']
 
     def create(self, request, *args, **kwargs):
+        response = Response({}, status=status.HTTP_200_OK)
         email = self.request.query_params.get('email')
         user = get_user_model().objects.get(email=email)
         if user and hasattr(user, 'userprofile') and user.userprofile.codementor_web_secret:
@@ -127,10 +128,11 @@ class CodementorWebhookViewset(ModelViewSet):
             calculated_signature = binascii.b2a_hex(digest)
             if signature_header == calculated_signature:
                 self.user = user
-                return super().create(request, *args, **kwargs)
+                response = super().create(request, *args, **kwargs)
+                response.status_code = status.HTTP_200_OK
 
         # Return 200 to keep Codementor happy
-        return Response({}, status=status.HTTP_200_OK)
+        return response
 
     def perform_create(self, serializer):
         serializer.save(user=self.user)
