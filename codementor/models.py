@@ -5,6 +5,7 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import JSONField
+from django.utils.timezone import now
 
 from allauth.socialaccount.models import SocialToken
 
@@ -32,7 +33,7 @@ class CodementorWebhook(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def get_appointment_time(self):
-        appt_time = ''
+        appt_time = now()
         appt_timestamp = self.data.get('appointment_timestamp')
         if appt_timestamp:
             timezone = pytz.timezone(settings.CALENDAR_TIME_ZONE)
@@ -63,8 +64,9 @@ def add_webhook_calendar_event(sender, instance=None, created=False, **kwargs):
     if instance.event_name == "scheduled_session.confirmed":
         start_time = instance.get_appointment_time()
         end_time = start_time + datetime.timedelta(hours=1)
-        summary = '{} scheduled session'.format(data['mentee']['name'])
-        description = data['schedule_url']
+        mentee = data.get('mentee', {})
+        summary = f"{mentee.get('name', 'unknown name')} scheduled session"
+        description = data.get('schedule_url', 'missing schedule url')
 
         if instance.user:
             service = GoogleCalendarService(instance.user)
