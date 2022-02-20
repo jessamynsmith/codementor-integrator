@@ -161,6 +161,7 @@ LOGIN_REDIRECT_URL = '/sessions/'
 
 # Allauth
 SOCIALACCOUNT_QUERY_EMAIL = True
+SOCIALACCOUNT_STORE_TOKENS = True
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'SCOPE': [

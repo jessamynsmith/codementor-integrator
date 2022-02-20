@@ -35,6 +35,8 @@ venv/*
 
 emails/*
 
+.env
+
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
