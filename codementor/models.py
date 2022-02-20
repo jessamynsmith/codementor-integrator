@@ -4,7 +4,7 @@ import pytz
 from django.db import models
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.postgres.fields import JSONField
+from django.db.models import JSONField
 
 from allauth.socialaccount.models import SocialToken
 

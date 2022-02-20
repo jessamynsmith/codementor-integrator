@@ -117,6 +117,7 @@ class CodementorWebhookViewset(ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         response = Response({}, status=status.HTTP_200_OK)
+        print(self.request.query_params)
         email = self.request.query_params.get('email')
         user = get_user_model().objects.get(email=email)
         if user and hasattr(user, 'userprofile') and user.userprofile.codementor_web_secret:
