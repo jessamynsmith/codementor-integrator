@@ -58,7 +58,8 @@ def add_webhook_calendar_event(sender, instance=None, created=False, **kwargs):
     scheduled_session.declined	When a scheduled session is declined
     scheduled_session.rescheduled	When a scheduled session is rescheduled
     """
-
+    print('add_webhook_calendar_event', instance.event_name)
+    print(instance.data)
     if instance.event_name == "scheduled_session.confirmed":
         start_time = instance.get_appointment_time()
         end_time = start_time + datetime.timedelta(hours=1)
