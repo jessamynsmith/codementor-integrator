@@ -31,7 +31,7 @@ class CodementorWebhook(models.Model):
                              null=True, blank=True)
     data = JSONField()
     created_at = models.DateTimeField(auto_now_add=True)
-    # TODO add field to indicate session has been successfully saved to google calendar
+    google_event_id = models.CharField(max_length=26, null=True, blank=True, default=None)
 
     def get_appointment_time(self):
         appt_time = now()
@@ -48,30 +48,35 @@ class CodementorWebhook(models.Model):
         return '{} - {} - {}'.format(
             self.event_name, self.get_mentee_name(), self.get_appointment_time())
 
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+        """
+        Event Name	Description
+        scheduled_session.created	When a scheduled session is created
+        scheduled_session.confirmed	When a scheduled session is confirmed
+        scheduled_session.cancelled	When a scheduled session is cancelled
+        scheduled_session.declined	When a scheduled session is declined
+        scheduled_session.rescheduled	When a scheduled session is rescheduled
+        """
+        print('add_webhook_calendar_event', self.event_name)
+        print(self.data)
 
-def add_webhook_calendar_event(sender, instance=None, created=False, **kwargs):
-    data = instance.data
+        if not self.google_event_id and self.event_name == "scheduled_session.confirmed":
+            start_time = self.get_appointment_time()
+            end_time = start_time + datetime.timedelta(hours=1)
+            mentee = self.data.get('mentee', {})
+            summary = f"{mentee.get('name', 'unknown name')} scheduled session"
+            description = self.data.get('schedule_url', 'missing schedule url')
 
-    """
-    Event Name	Description
-    scheduled_session.created	When a scheduled session is created
-    scheduled_session.confirmed	When a scheduled session is confirmed
-    scheduled_session.cancelled	When a scheduled session is cancelled
-    scheduled_session.declined	When a scheduled session is declined
-    scheduled_session.rescheduled	When a scheduled session is rescheduled
-    """
-    print('add_webhook_calendar_event', instance.event_name)
-    print(instance.data)
-    if instance.event_name == "scheduled_session.confirmed":
-        start_time = instance.get_appointment_time()
-        end_time = start_time + datetime.timedelta(hours=1)
-        mentee = data.get('mentee', {})
-        summary = f"{mentee.get('name', 'unknown name')} scheduled session"
-        description = data.get('schedule_url', 'missing schedule url')
+            if self.user:
+                try:
+                    service = GoogleCalendarService(self.user)
+                    event = service.add_calendar_event(start_time, end_time, summary, description)
+                    self.google_event_id = event['id']
+                except Exception as e:
+                    print(e)
 
-        if instance.user:
-            service = GoogleCalendarService(instance.user)
-            service.add_calendar_event(start_time, end_time, summary, description)
+        super().save(force_insert, force_update, using, update_fields)
 
 
 def add_user_profile(sender, instance=None, created=False, **kwargs):
@@ -79,5 +84,4 @@ def add_user_profile(sender, instance=None, created=False, **kwargs):
         UserProfile.objects.create(user=instance)
 
 
-models.signals.post_save.connect(add_webhook_calendar_event, CodementorWebhook)
 models.signals.post_save.connect(add_user_profile, get_user_model())

@@ -44,3 +44,9 @@ class GoogleCalendarService:
 
         event = self.service.events().insert(calendarId=calendar_id, body=event_data).execute()
         print('created event', event)
+        return event
+
+    def get_calendar_event(self, event_id, calendar_id='primary'):
+        event = self.service.events().get(calendarId=calendar_id, eventId=event_id).execute()
+        print('created event', event)
+        return event

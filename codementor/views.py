@@ -149,10 +149,9 @@ class CodementorWebhookViewset(ModelViewSet):
         signature = request.META.get('HTTP_X_CM_SIGNATURE')
         if settings.DEBUG or self._validate_signature(user, signature, request.stream.body):
             self.user = user
-            try:
-                response = super().create(request, *args, **kwargs)
-            except Exception as e:
-                print(e)
+            response = super().create(request, *args, **kwargs)
+
+            if not self.object.google_event_id:
                 # Email failure notification to user
                 full_domain = helpers.get_full_domain()
                 edit_url = reverse_lazy('update_session', kwargs={'pk': self.object.pk})
