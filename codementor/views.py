@@ -5,6 +5,7 @@ import hmac
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.mail import send_mail
 from django.views.generic import DeleteView, DetailView, FormView, ListView, TemplateView, UpdateView
 from django.urls import reverse_lazy
 from rest_framework import status
@@ -12,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from codementor import forms as cm_forms
+from codementor import helpers
 from codementor import models as cm_models
 from codementor import serializers as cm_serializers
 from codementor.codementor_api import CodementorApi
@@ -116,7 +118,7 @@ class CodementorSessions(LoginRequiredMixin, ListView):
         return context_data
 
 
-class CodementorWebhookUpdateView(UpdateView):
+class CodementorWebhookUpdateView(LoginRequiredMixin, UpdateView):
     model = cm_models.CodementorWebhook
     fields = []
     success_url = reverse_lazy('sessions')
@@ -152,10 +154,21 @@ class CodementorWebhookViewset(ModelViewSet):
             except Exception as e:
                 print(e)
                 # Email failure notification to user
+                full_domain = helpers.get_full_domain()
+                edit_url = reverse_lazy('update_session', kwargs={'pk': self.object.pk})
+                body = f'Please save this session manually to add it to google calendar: {full_domain}{edit_url}'
+                send_mail(
+                    'Session Save Failure!',
+                    body,
+                    settings.ADMIN_EMAIL,
+                    [user.email],
+                    fail_silently=False,
+                )
+
             response.status_code = status.HTTP_200_OK
 
         # Return 200 to keep Codementor happy
         return response
 
     def perform_create(self, serializer):
-        serializer.save(user=self.user)
+        self.object = serializer.save(user=self.user)
