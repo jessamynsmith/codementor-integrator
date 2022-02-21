@@ -31,6 +31,7 @@ class CodementorWebhook(models.Model):
                              null=True, blank=True)
     data = JSONField()
     created_at = models.DateTimeField(auto_now_add=True)
+    # TODO add field to indicate session has been successfully saved to google calendar
 
     def get_appointment_time(self):
         appt_time = now()

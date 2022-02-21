@@ -174,7 +174,7 @@ SOCIALACCOUNT_PROVIDERS = {
         }
     }
 }
-CALENDAR_TIME_ZONE = 'America/Edmonton'
+CALENDAR_TIME_ZONE = 'America/Edmonton'  # TODO move to user profile
 
 
 # Do not allow django heroku to override allowed_hosts; only allow it to

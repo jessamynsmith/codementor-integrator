@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% load tz %}
+
 
 {% block title %}Sessions{% endblock %}
 
@@ -10,17 +12,33 @@
 <table class="table">
   <thead>
     <tr>
-      <th scope="col">Session</th>
+      <th scope="col">Event</th>
+      <th scope="col">Client</th>
+      <th scope="col">Session Time</th>
+      <th scope="col">Created At</th>
     </tr>
   </thead>
   <tbody>
+  {% timezone user_timezone %}
     {% for object in object_list %}
     <tr>
     	<td>
-            {{ object }}
+            <a href="{% url 'update_session' pk=object.pk %}">
+            {{ object.event_name }}
+            </a>
+        </td>
+        <td>
+            {{ object.get_mentee_name }}
+        </td>
+        <td>
+            {{ object.get_appointment_time }}
+        </td>
+        <td>
+            {{ object.created_at }}
         </td>
 	</tr>
     {% endfor %}
+  {% endtimezone %}
 </tbody>
 </table>
 

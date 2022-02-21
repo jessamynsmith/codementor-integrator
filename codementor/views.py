@@ -106,9 +106,20 @@ class CodementorSessions(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        queryset = queryset.filter(event_name="scheduled_session.created")
+        # queryset = queryset.filter(event_name="scheduled_session.created")
         queryset = queryset.order_by('-created_at')
         return queryset
+
+    def get_context_data(self, *args, **kwargs):
+        context_data = super().get_context_data(*args, **kwargs)
+        context_data['user_timezone'] = settings.CALENDAR_TIME_ZONE
+        return context_data
+
+
+class CodementorWebhookUpdateView(UpdateView):
+    model = cm_models.CodementorWebhook
+    fields = []
+    success_url = reverse_lazy('sessions')
 
 
 class CodementorWebhookViewset(ModelViewSet):
@@ -136,7 +147,11 @@ class CodementorWebhookViewset(ModelViewSet):
         signature = request.META.get('HTTP_X_CM_SIGNATURE')
         if settings.DEBUG or self._validate_signature(user, signature, request.stream.body):
             self.user = user
-            response = super().create(request, *args, **kwargs)
+            try:
+                response = super().create(request, *args, **kwargs)
+            except Exception as e:
+                print(e)
+                # Email failure notification to user
             response.status_code = status.HTTP_200_OK
 
         # Return 200 to keep Codementor happy

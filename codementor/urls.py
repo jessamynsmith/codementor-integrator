@@ -17,4 +17,5 @@ urlpatterns = [
     path('calendar/add/', cm_views.AddCalendarEventsView.as_view(), name='add_events_to_calendar'),
     path('sessions/', cm_views.CodementorSessions.as_view(), name='sessions'),
     path('sessions/completed/', cm_views.CodementorCompletedSessions.as_view(), name='completed_sessions'),
+    path('sessions/<int:pk>/update/', cm_views.CodementorWebhookUpdateView.as_view(), name='update_session'),
 ]
