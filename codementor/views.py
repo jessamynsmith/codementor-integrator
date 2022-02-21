@@ -2,6 +2,7 @@ import binascii
 import hashlib
 import hmac
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import DeleteView, DetailView, FormView, ListView, TemplateView, UpdateView
@@ -115,21 +116,28 @@ class CodementorWebhookViewset(ModelViewSet):
     serializer_class = cm_serializers.CodementorWebhookSerializer
     http_method_names = ['post']
 
+    def _validate_signature(self, user, signature, body):
+        if user and hasattr(user, 'userprofile') and user.userprofile.codementor_web_secret:
+            signature_header = signature.encode()
+            digest = hmac.new(
+                user.userprofile.codementor_web_secret.encode(),
+                msg=body,
+                digestmod=hashlib.sha256).digest()
+            calculated_signature = binascii.b2a_hex(digest)
+            if signature_header == calculated_signature:
+                return True
+
+        return False
+
     def create(self, request, *args, **kwargs):
         response = Response({}, status=status.HTTP_200_OK)
         email = self.request.query_params.get('email')
         user = get_user_model().objects.get(email=email)
-        if user and hasattr(user, 'userprofile') and user.userprofile.codementor_web_secret:
-            signature_header = request.META.get('HTTP_X_CM_SIGNATURE').encode()
-            digest = hmac.new(
-                user.userprofile.codementor_web_secret.encode(),
-                msg=request.stream.body,
-                digestmod=hashlib.sha256).digest()
-            calculated_signature = binascii.b2a_hex(digest)
-            if signature_header == calculated_signature:
-                self.user = user
-                response = super().create(request, *args, **kwargs)
-                response.status_code = status.HTTP_200_OK
+        signature = request.META.get('HTTP_X_CM_SIGNATURE')
+        if settings.DEBUG or self._validate_signature(user, signature, request.stream.body):
+            self.user = user
+            response = super().create(request, *args, **kwargs)
+            response.status_code = status.HTTP_200_OK
 
         # Return 200 to keep Codementor happy
         return response
