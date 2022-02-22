@@ -151,7 +151,7 @@ class CodementorWebhookViewset(ModelViewSet):
             self.user = user
             response = super().create(request, *args, **kwargs)
 
-            if not self.object.google_event_id:
+            if self.object.event_name == "scheduled_session.confirmed" and not self.object.google_event_id:
                 # Email failure notification to user
                 full_domain = helpers.get_full_domain()
                 edit_url = reverse_lazy('update_session', kwargs={'pk': self.object.pk})
