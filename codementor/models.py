@@ -42,9 +42,10 @@ class Session(models.Model):
         max_digits=10, decimal_places=2, null=True, blank=True)
     session_length = models.IntegerField(null=True, blank=True)
     CREATED = 'created'
+    CONFIRMED = 'confirmed'
     STATUS_CHOICES = (
         (CREATED, 'created'),
-        ('confirmed', 'confirmed'),
+        (CONFIRMED, 'confirmed'),
         ('cancelled', 'cancelled'),
         ('declined', 'declined'),
         ('rescheduled', 'rescheduled')
@@ -56,6 +57,18 @@ class Session(models.Model):
         return f"{self.client} - {self.session_id} - {self.scheduled_start} - {self.status}"
 
 
+def save_session_and_client(record):
+    client_info = record.data['mentee']
+    client, created = Client.objects.get_or_create(**client_info)
+    appointment_timestamp = record.data['appointment_timestamp']
+    scheduled_start = datetime.datetime.fromtimestamp(appointment_timestamp, tz=pytz.UTC)
+    status = record.event_name.replace('scheduled_session.')
+    session, created = Session.objects.get_or_create(session_id=record.data['id'], defaults={
+        'client': client, 'status': status, 'google_event_id': record.google_event_id,
+        'scheduled_start': scheduled_start})
+    return session
+
+
 class CodementorWebhook(models.Model):
     event_name = models.CharField(max_length=40)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
@@ -63,7 +76,7 @@ class CodementorWebhook(models.Model):
     data = JSONField()
     created_at = models.DateTimeField(auto_now_add=True)
     session = models.ForeignKey(Session, on_delete=models.CASCADE, null=True)
-    # TODO switch this to FK to Session
+    # TODO remove this
     google_event_id = models.CharField(max_length=26, null=True, blank=True, default=None)
 
     def get_appointment_time(self):
@@ -94,7 +107,9 @@ class CodementorWebhook(models.Model):
         print('add_webhook_calendar_event', self.event_name)
         print(self.data)
 
-        if not self.google_event_id and self.event_name == "scheduled_session.confirmed":
+        self.session = save_session_and_client(self)
+
+        if not self.session.google_event_id and self.event_name == "scheduled_session.confirmed":
             start_time = self.get_appointment_time()
             end_time = start_time + datetime.timedelta(hours=1)
             mentee = self.data.get('mentee', {})
@@ -105,7 +120,8 @@ class CodementorWebhook(models.Model):
                 try:
                     service = GoogleCalendarService(self.user)
                     event = service.add_calendar_event(start_time, end_time, summary, description)
-                    self.google_event_id = event['id']
+                    self.session.google_event_id = event['id']
+                    self.session.save()
                 except Exception as e:
                     print(e)
 
