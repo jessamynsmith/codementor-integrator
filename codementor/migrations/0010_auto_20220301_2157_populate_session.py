@@ -11,6 +11,7 @@ def create_sessions(apps, schema_editor):
     Client = apps.get_model('codementor', 'Client')
     Session = apps.get_model('codementor', 'Session')
     for record in CodementorWebhook.objects.all():
+        print(record.data)
         client_info = record.data['mentee']
         client, created = Client.objects.get_or_create(**client_info)
         scheduled_start = datetime.datetime.fromtimestamp(
