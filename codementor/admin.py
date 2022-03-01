@@ -10,5 +10,7 @@ class CodementorWebhookAdmin(admin.ModelAdmin):
                      'data', 'created_at')
 
 
+admin.site.register(codementor_models.Client)
 admin.site.register(codementor_models.CodementorWebhook, CodementorWebhookAdmin)
+admin.site.register(codementor_models.Session)
 admin.site.register(codementor_models.UserProfile)

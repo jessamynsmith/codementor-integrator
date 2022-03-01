@@ -24,6 +24,36 @@ class UserProfile(models.Model):
 # TODO Create a model with session data that keeps track of what state the session is in
 # Add a field for the google calendar event id
 
+class Client(models.Model):
+    name = models.CharField(max_length=100)
+    username = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.name} ({self.username})"
+
+
+class Session(models.Model):
+    """ Session data retrieved from Codementor """
+    session_id = models.CharField(max_length=10, unique=True)
+    client = models.ForeignKey(Client, on_delete=models.CASCADE)
+    scheduled_start = models.DateTimeField(null=True, blank=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+    amount_before_platform_fee: models.DecimalField(decimal_places=2, null=True, blank=True)
+    session_length = models.IntegerField(null=True, blank=True)
+    CREATED = 'created'
+    STATUS_CHOICES = (
+        (CREATED, 'created'),
+        ('confirmed', 'confirmed'),
+        ('cancelled', 'cancelled'),
+        ('declined', 'declined'),
+        ('rescheduled', 'rescheduled')
+    )
+    status = models.CharField(max_length=11, choices=STATUS_CHOICES, default=CREATED)
+    google_event_id = models.CharField(max_length=26, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.client} - {self.session_id} - {self.scheduled_start} - {self.status}"
+
 
 class CodementorWebhook(models.Model):
     event_name = models.CharField(max_length=40)
@@ -31,6 +61,7 @@ class CodementorWebhook(models.Model):
                              null=True, blank=True)
     data = JSONField()
     created_at = models.DateTimeField(auto_now_add=True)
+    # TODO switch this to FK to Session
     google_event_id = models.CharField(max_length=26, null=True, blank=True, default=None)
 
     def get_appointment_time(self):
