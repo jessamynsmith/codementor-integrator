@@ -38,7 +38,8 @@ class Session(models.Model):
     client = models.ForeignKey(Client, on_delete=models.CASCADE)
     scheduled_start = models.DateTimeField(null=True, blank=True)
     finished_at = models.DateTimeField(null=True, blank=True)
-    amount_before_platform_fee: models.DecimalField(decimal_places=2, null=True, blank=True)
+    amount_before_platform_fee = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True)
     session_length = models.IntegerField(null=True, blank=True)
     CREATED = 'created'
     STATUS_CHOICES = (
@@ -61,6 +62,7 @@ class CodementorWebhook(models.Model):
                              null=True, blank=True)
     data = JSONField()
     created_at = models.DateTimeField(auto_now_add=True)
+    session = models.ForeignKey(Session, on_delete=models.CASCADE, null=True)
     # TODO switch this to FK to Session
     google_event_id = models.CharField(max_length=26, null=True, blank=True, default=None)
 
