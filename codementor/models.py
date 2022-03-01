@@ -75,7 +75,7 @@ class CodementorWebhook(models.Model):
                              null=True, blank=True)
     data = JSONField()
     created_at = models.DateTimeField(auto_now_add=True)
-    session = models.ForeignKey(Session, on_delete=models.CASCADE, null=True)
+    session = models.ForeignKey(Session, on_delete=models.CASCADE, null=True, blank=True)
     # TODO remove this
     google_event_id = models.CharField(max_length=26, null=True, blank=True, default=None)
 
@@ -109,6 +109,7 @@ class CodementorWebhook(models.Model):
 
         self.session = save_session_and_client(self)
 
+        # TODO if webhook is cancelled, delete google event
         if not self.session.google_event_id and self.event_name == "scheduled_session.confirmed":
             start_time = self.get_appointment_time()
             end_time = start_time + datetime.timedelta(hours=1)
