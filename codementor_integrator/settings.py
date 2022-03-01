@@ -156,7 +156,9 @@ if not EMAIL_HOST_PASSWORD:
     EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'emails')
 
 
+SESSION_COOKIE_AGE = 7200
 LOGIN_REDIRECT_URL = '/sessions/'
+ACCOUNT_LOGOUT_ON_GET = True
 
 
 # Allauth
