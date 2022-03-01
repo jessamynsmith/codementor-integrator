@@ -11,14 +11,18 @@ def create_sessions(apps, schema_editor):
     Client = apps.get_model('codementor', 'Client')
     Session = apps.get_model('codementor', 'Session')
     for record in CodementorWebhook.objects.all():
-        print(record.data)
-        client_info = record.data['mentee']
-        client, created = Client.objects.get_or_create(**client_info)
-        scheduled_start = datetime.datetime.fromtimestamp(
-            record.data['appointment_timestamp'], tz=pytz.UTC)
-        Session.objects.get_or_create(session_id=record.data['id'], defaults={
-            'client': client, 'status': CONFIRMED, 'google_event_id': record.google_event_id,
-            'scheduled_start': scheduled_start})
+        try:
+            client_info = record.data['mentee']
+            client, created = Client.objects.get_or_create(**client_info)
+            start_timestamp = record.data.get('start_timestamp')
+            appointment_timestamp = record.data.get('appointment_timestamp', start_timestamp)
+            scheduled_start = datetime.datetime.fromtimestamp(appointment_timestamp, tz=pytz.UTC)
+            Session.objects.get_or_create(session_id=record.data['id'], defaults={
+                'client': client, 'status': CONFIRMED, 'google_event_id': record.google_event_id,
+                'scheduled_start': scheduled_start})
+        except Exception as e:
+            print(e)
+            print(record.data)
 
 
 class Migration(migrations.Migration):
