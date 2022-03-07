@@ -60,8 +60,8 @@ class Session(models.Model):
 def save_session_and_client(record):
     client_info = record.data['mentee']
     client, created = Client.objects.get_or_create(**client_info)
-    appointment_timestamp = record.data['appointment_timestamp']
-    scheduled_start = datetime.datetime.fromtimestamp(appointment_timestamp, tz=pytz.UTC)
+    start_timestamp = record.data['start_timestamp']
+    scheduled_start = datetime.datetime.fromtimestamp(start_timestamp, tz=pytz.UTC)
     status = record.event_name.replace('scheduled_session.', '')
     session, created = Session.objects.get_or_create(session_id=record.data['id'], defaults={
         'client': client, 'status': status, 'google_event_id': record.google_event_id,
