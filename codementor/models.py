@@ -60,7 +60,7 @@ class Session(models.Model):
 def save_session_and_client(record):
     client_info = record.data['mentee']
     client, created = Client.objects.get_or_create(**client_info)
-    start_timestamp = record.data['start_timestamp']
+    start_timestamp = CodementorWebhook.get_appointment_timestamp(record.data)
     scheduled_start = datetime.datetime.fromtimestamp(start_timestamp, tz=pytz.UTC)
     status = record.event_name.replace('scheduled_session.', '')
     session, created = Session.objects.get_or_create(session_id=record.data['id'], defaults={
@@ -79,9 +79,15 @@ class CodementorWebhook(models.Model):
     # TODO remove this
     google_event_id = models.CharField(max_length=26, null=True, blank=True, default=None)
 
+    @staticmethod
+    def get_appointment_timestamp(data):
+        start_timestamp = data.get('start_timestamp')
+        appointment_timestamp = data.get('appointment_timestamp', start_timestamp)
+        return appointment_timestamp
+
     def get_appointment_time(self):
         appt_time = now()
-        appt_timestamp = self.data.get('appointment_timestamp')
+        appt_timestamp = self.get_appointment_timestamp(self.data)
         if appt_timestamp:
             timezone = pytz.timezone(settings.CALENDAR_TIME_ZONE)
             appt_time = datetime.datetime.fromtimestamp(int(appt_timestamp), tz=timezone)
