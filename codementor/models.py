@@ -96,15 +96,15 @@ class CodementorWebhook(models.Model):
     def get_mentee_name(self):
         return self.data.get('mentee', {}).get('name', '')
 
-    def get_status(self):
-        status = None
+    def get_google_event_id(self):
+        google_event_id = None
         if self.session:
-            status = self.session.status
-        return status
+            google_event_id = self.session.google_event_id
+        return google_event_id
 
     def __str__(self):
         return '{} - {} - {} - {}'.format(
-            self.event_name, self.get_mentee_name(), self.get_status(),
+            self.event_name, self.get_mentee_name(), self.get_google_event_id(),
             self.get_appointment_time())
 
     def save(self, force_insert=False, force_update=False, using=None,
