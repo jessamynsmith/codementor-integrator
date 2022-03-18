@@ -14,6 +14,7 @@
     <tr>
       <th scope="col">Event</th>
       <th scope="col">Client</th>
+      <th scope="col">Status</th>
       <th scope="col">Session Time</th>
       <th scope="col">Created At</th>
     </tr>
@@ -29,6 +30,9 @@
         </td>
         <td>
             {{ object.get_mentee_name }}
+        </td>
+        <td>
+            {{ object.get_status }}
         </td>
         <td>
             {{ object.get_appointment_time }}
